@@ -21,13 +21,7 @@ public class Socio {
         this.cedula = pCedula;
         this.nombre = pNombre;
         this.tipoSubscripcion = pTipo;
-
-        if (this.tipoSubscripcion == Tipo.VIP) {
-            this.fondos = FONDOS_INICIALES_VIP;
-        } else {
-            this.fondos = FONDOS_INICIALES_REGULARES;
-        }
-
+        this.fondos = (pTipo == Tipo.VIP) ? FONDOS_INICIALES_VIP : FONDOS_INICIALES_REGULARES;
         this.facturas = new ArrayList<>();
         this.autorizados = new ArrayList<>();
     }
@@ -50,55 +44,57 @@ public class Socio {
         return false;
     }
 
-    public void aumentarFondos(double pFondos) {
+    public void aumentarFondos(double pFondos) throws Exception {
         double maximo = (this.tipoSubscripcion == Tipo.VIP) ? MONTO_MAXIMO_VIP : MONTO_MAXIMO_REGULARES;
-        if (this.fondos + pFondos <= maximo) {
-            this.fondos += pFondos;
-        } else {
-            System.out.println("Con este monto se excederían los fondos máximos");
+        if (this.fondos + pFondos > maximo) {
+            throw new Exception("Error: No se pueden exceder los fondos máximos permitidos ($" + maximo + ").");
         }
+        this.fondos += pFondos;
     }
 
-    public void registrarConsumo(String pNombre, String pConcepto, double pValor) {
-        if (pValor <= this.fondos) {
-            this.facturas.add(new Factura(pNombre, pConcepto, pValor));
-        } else {
-            System.out.println("El socio no posee fondos suficientes para este consumo");
+    public void registrarConsumo(String pNombre, String pConcepto, double pValor) throws Exception {
+        if (!pNombre.equals(this.nombre) && !existeAutorizado(pNombre)) {
+            throw new Exception("Error: El consumidor no es el socio ni un autorizado.");
         }
+        if (pValor > this.fondos) {
+            throw new Exception("Error: Fondos insuficientes para este consumo.");
+        }
+        this.facturas.add(new Factura(pNombre, pConcepto, pValor));
     }
 
-    public void agregarAutorizado(String pNombreAutorizado) {
+}
+
+    public void agregarAutorizado(String pNombreAutorizado) throws Exception {
         if (pNombreAutorizado.equals(this.nombre)) {
-            System.out.println("No puede agregar el socio como autorizado.");
-        } else if (this.fondos > 0 && !existeAutorizado(pNombreAutorizado)) {
-            this.autorizados.add(pNombreAutorizado);
-        } else if (this.fondos <= 0) {
-            System.out.println("El socio no tiene fondos para financiar un nuevo autorizado.");
-        } else if (existeAutorizado(pNombreAutorizado)) {
-            System.out.println("El autorizado ya existe.");
+            throw new Exception("Error: El socio no puede ser su propio autorizado.");
         }
+        if (this.fondos <= 0) {
+            throw new Exception("Error: Socio sin fondos para agregar autorizados.");
+        }
+        if (existeAutorizado(pNombreAutorizado)) {
+            throw new Exception("Error: El autorizado ya existe.");
+        }
+        this.autorizados.add(pNombreAutorizado);
     }
 
-    public void eliminarAutorizado(String pNombreAutorizado) {
+    public void eliminarAutorizado(String pNombreAutorizado) throws Exception {
         if (tieneFacturaAsociada(pNombreAutorizado)) {
-            System.out.println(pNombreAutorizado + " tiene una factura sin pagar.");
-        } else {
-            boolean eliminado = this.autorizados.remove(pNombreAutorizado);
-            if (!eliminado) {
-                System.out.println("El autorizado no existe.");
-            }
+            throw new Exception("Error: " + pNombreAutorizado + " tiene facturas pendientes.");
+        }
+        if (!this.autorizados.remove(pNombreAutorizado)) {
+            throw new Exception("Error: El autorizado no existe.");
         }
     }
 
-    public void pagarFactura(int pIndiceFactura) {
-        if (pIndiceFactura >= 0 && pIndiceFactura < this.facturas.size()) {
-            Factura f = this.facturas.get(pIndiceFactura);
-            if (f.darValor() <= this.fondos) {
-                this.fondos -= f.darValor();
-                this.facturas.remove(pIndiceFactura);
-            } else {
-                System.out.println("El socio no posee fondos suficientes para pagar esta factura");
-            }
+    public void pagarFactura(int pIndiceFactura) throws Exception {
+        if (pIndiceFactura < 0 || pIndiceFactura >= this.facturas.size()) {
+            throw new Exception("Error: Indice de factura inválido.");
         }
+        Factura f = this.facturas.get(pIndiceFactura);
+        if (f.darValor() > this.fondos) {
+            throw new Exception("Error: Fondos insuficientes para pagar la factura.");
+        }
+        this.fondos -= f.darValor();
+        this.facturas.remove(pIndiceFactura);
     }
 }

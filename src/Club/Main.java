@@ -6,107 +6,80 @@ import Club.Socio.Tipo;
 
 public class Main {
     public static void main(String[] args) {
-
         Scanner sc = new Scanner(System.in);
         Club club = new Club();
         int op = 0;
 
         do {
             System.out.println("\n--- MENU CLUB SOCIAL ---");
-            System.out.println("1. Afiliar un socio al club.");
-            System.out.println("2. Registrar una persona autorizada por un socio.");
-            System.out.println("3. Pagar una factura.");
-            System.out.println("4. Registrar un consumo en la cuenta de un socio.");
-            System.out.println("5. Aumentar fondos de la cuenta de un socio.");
-            System.out.println("6. Ver Total Consumos de un Socio.");
-            System.out.println("7. Validar Eliminación de Socio.");
+            System.out.println("1. Afiliar socio");
+            System.out.println("2. Agregar autorizado");
+            System.out.println("3. Pagar factura");
+            System.out.println("4. Registrar consumo");
+            System.out.println("5. Aumentar fondos");
+            System.out.println("6. Total consumos socio");
+            System.out.println("7. Eliminar socio");
             System.out.println("8. Salir");
-            System.out.print("Ingrese una opcion: ");
+            System.out.print("Seleccione: ");
 
             try {
-                String input = sc.nextLine();
-                op = Integer.parseInt(input);
+                op = Integer.parseInt(sc.nextLine());
+                switch (op) {
+                    case 1:
+                        System.out.print("Cédula: "); String c1 = sc.nextLine();
+                        System.out.print("Nombre: "); String n1 = sc.nextLine();
+                        System.out.print("Tipo (1.VIP, 2.Regular): "); String t1 = sc.nextLine();
+                        Tipo tipo = t1.equals("1") ? Tipo.VIP : Tipo.REGULAR;
+                        club.afiliarSocio(c1, n1, tipo);
+                        System.out.println("Afiliación exitosa.");
+                        break;
+                    case 2:
+                        System.out.print("Cédula Socio: "); String c2 = sc.nextLine();
+                        System.out.print("Nombre Autorizado: "); String n2 = sc.nextLine();
+                        club.agregarAutorizadoSocio(c2, n2);
+                        System.out.println("Autorizado agregado.");
+                        break;
+                    case 3:
+                        System.out.print("Cédula: "); String c3 = sc.nextLine();
+                        Socio s = club.buscarSocio(c3);
+                        if (s != null) {
+                            ArrayList<Factura> facts = s.darFacturas();
+                            if (facts.isEmpty()) throw new Exception("No hay facturas pendientes.");
+                            for (int i = 0; i < facts.size(); i++) System.out.println(i + ". " + facts.get(i));
+                            System.out.print("Índice a pagar: ");
+                            int idx = Integer.parseInt(sc.nextLine());
+                            club.pagarFacturaSocio(c3, idx);
+                            System.out.println("Pago exitoso.");
+                        } else throw new Exception("Socio no encontrado.");
+                        break;
+                    case 4:
+                        System.out.print("Cédula: "); String c4 = sc.nextLine();
+                        System.out.print("Consumidor: "); String n4 = sc.nextLine();
+                        System.out.print("Concepto: "); String con = sc.nextLine();
+                        System.out.print("Valor: "); double v4 = Double.parseDouble(sc.nextLine());
+                        club.registrarConsumo(c4, n4, con, v4);
+                        System.out.println("Consumo registrado.");
+                        break;
+                    case 5:
+                        System.out.print("Cédula: "); String c5 = sc.nextLine();
+                        System.out.print("Monto: "); double v5 = Double.parseDouble(sc.nextLine());
+                        club.aumentarFondosSocio(c5, v5);
+                        System.out.println("Fondos actualizados.");
+                        break;
+                    case 6:
+                        System.out.print("Cédula: "); String c6 = sc.nextLine();
+                        System.out.println("Total: $" + club.totalConsumosSocio(c6));
+                        break;
+                    case 7:
+                        System.out.print("Cédula: "); String c7 = sc.nextLine();
+                        club.eliminarSocio(c7);
+                        System.out.println("Socio eliminado.");
+                        break;
+                }
             } catch (NumberFormatException e) {
-                System.out.println("Opción inválida, ingrese un número.");
-                continue;
-            }
-
-            switch (op) {
-                case 1: {
-                    System.out.print("Ingrese Cédula: ");
-                    String cedula = sc.nextLine();
-                    System.out.print("Ingrese Nombre: ");
-                    String nombre = sc.nextLine();
-                    System.out.println("Seleccione Tipo (1. VIP, 2. REGULAR): ");
-                    String tipoStr = sc.nextLine();
-                    Tipo tipo = (tipoStr.equals("1") || tipoStr.equalsIgnoreCase("VIP")) ? Tipo.VIP : Tipo.REGULAR;
-                    club.afiliarSocio(cedula, nombre, tipo);
-                } break;
-
-                case 2: {
-                    System.out.print("Ingrese Cédula del Socio: ");
-                    String cedula = sc.nextLine();
-                    System.out.print("Ingrese Nombre del Autorizado: ");
-                    String autorizado = sc.nextLine();
-                    club.agregarAutorizadoSocio(cedula, autorizado);
-                } break;
-
-                case 3: {
-                    System.out.print("Ingrese Cédula del Socio: ");
-                    String cedula = sc.nextLine();
-                    Socio s = club.buscarSocio(cedula);
-                    if (s != null) {
-                        ArrayList<Factura> facturas = s.darFacturas();
-                        if (facturas.isEmpty()) {
-                            System.out.println("El socio no tiene facturas pendientes.");
-                        } else {
-                            for (int i = 0; i < facturas.size(); i++) {
-                                System.out.println(i + ". " + facturas.get(i).toString());
-                            }
-                            System.out.print("Ingrese el índice de factura: ");
-                            try {
-                                int indice = Integer.parseInt(sc.nextLine());
-                                club.pagarFacturaSocio(cedula, indice);
-                            } catch (NumberFormatException e) {
-                                System.out.println("Índice inválido.");
-                            }
-                        }
-                    } else {
-                        System.out.println("Socio no encontrado.");
-                    }
-                } break;
-
-                case 4: {
-                    System.out.print("Cédula: "); String id = sc.nextLine();
-                    System.out.print("Nombre de quien consume: "); String nom = sc.nextLine();
-                    System.out.print("Concepto: "); String con = sc.nextLine();
-                    System.out.print("Valor: ");
-                    try {
-                        double v = Double.parseDouble(sc.nextLine());
-                        club.registrarConsumo(id, nom, con, v);
-                    } catch (Exception e) { System.out.println("Monto inválido."); }
-                } break;
-
-                case 5: {
-                    System.out.print("Cédula: "); String id = sc.nextLine();
-                    System.out.print("Monto: ");
-                    try {
-                        double m = Double.parseDouble(sc.nextLine());
-                        club.aumentarFondosSocio(id, m);
-                    } catch (Exception e) { System.out.println("Monto inválido."); }
-                } break;
-
-                case 6: {
-                    System.out.print("Cédula: "); String id = sc.nextLine();
-                    double t = club.totalConsumosSocio(id);
-                    if (t != -1) System.out.println("Total consumos: $" + t);
-                } break;
-
-                case 7: {
-                    System.out.print("Cédula: "); String id = sc.nextLine();
-                    if (club.sePuedeEliminarSocio(id)) System.out.println("SÍ se puede eliminar.");
-                    else System.out.println("NO se puede eliminar.");
-                } break;
+                System.out.println("Error: Ingrese un número válido.");
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         } while (op != 8);
         sc.close();
