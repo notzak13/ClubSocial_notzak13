@@ -62,8 +62,6 @@ public class Socio {
         this.facturas.add(new Factura(pNombre, pConcepto, pValor));
     }
 
-}
-
     public void agregarAutorizado(String pNombreAutorizado) throws Exception {
         if (pNombreAutorizado.equals(this.nombre)) {
             throw new Exception("Error: El socio no puede ser su propio autorizado.");
